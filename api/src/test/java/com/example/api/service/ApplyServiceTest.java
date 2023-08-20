@@ -51,7 +51,30 @@ class ApplyServiceTest {
         long count = couponRepository.count();
 
         assertThat(count).isEqualTo(100);
+    }
 
+    @Test
+    public void redis여러명응모() throws InterruptedException {
+        int threadCount = 1000;
+        ExecutorService executorService = Executors.newFixedThreadPool(32);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        for(int i = 0; i < threadCount; i++){
+            long userId = i;
+            executorService.submit(() -> {
+                try {
+                    applyService.redisApply(userId);
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await();
+
+        long count = couponRepository.count();
+
+        assertThat(count).isEqualTo(100);
     }
 
 }
